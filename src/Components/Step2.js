@@ -3,13 +3,11 @@ import WizardStep from "./WizardStep";
 import * as Yup from "yup";
 import { ErrorMessage, Field, Form, Formik, useFormikContext } from "formik";
 
-const Step2 = () => {
+const Step2 = (props) => {
   const { values, submitForm } = useFormikContext();
 
   return (
     <>
-      {JSON.stringify(values, null, 2)}
-
       <div>
         <label htmlFor="email">Email</label>
         <Field
@@ -21,9 +19,6 @@ const Step2 = () => {
           type="text"
         />
         <ErrorMessage className="error" component="div" name="email" />
-        <label htmlFor="social">Social Media</label>
-        <Field name="social.facebook" />
-        <Field name="social.twitter" />
       </div>
     </>
   );
