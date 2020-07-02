@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
-import { Debug } from './Debug';
-import { makeStyles } from '@material-ui/core/styles';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
+import { Debug } from "./Debug";
+import { makeStyles } from "@material-ui/core/styles";
+import Stepper from "@material-ui/core/Stepper";
+import Step from "@material-ui/core/Step";
+import StepLabel from "@material-ui/core/StepLabel";
+import Button from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
+import Step1 from "./Components/Step1";
+import Step2 from "./Components/Step2";
+import WizardStep from "./Components/WizardStep";
 
-
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Wizard is a single Formik instance whose children are each page of the
 // multi-step form. The form is submitted on each forward transition (can only
@@ -18,21 +20,56 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 // incomplete data. A snapshot of form state is used as initialValues after each
 // transition. Each page has an optional submit handler, and the top-level
 // submit is called when the final page is submitted.
+
+const steps = [
+  <WizardStep
+    onSubmit={(values) => console.log("Step1 onSubmit", values)}
+    validationSchema={Yup.object({
+      firstName: Yup.string().required("required"),
+      lastName: Yup.string().required("required"),
+    })}
+  >
+    <Step1 />
+  </WizardStep>,
+  <WizardStep
+    onSubmit={(values) => console.log("Step2 onSubmit", values)}
+    validationSchema={Yup.object({
+      email: Yup.string()
+        // .email("Invalid email address")
+        // .required("required")
+        .when(["firstName", "lastName"], {
+          is: (firstName, lastName) => {
+            console.log(firstName, lastName);
+            let x = firstName.length === 2 && lastName.length === 3;
+            console.log(x);
+            return x;
+          },
+          then: Yup.string()
+            .email("Invalid email address")
+            .required("required.."),
+          otherwise: Yup.string().required("required string..."),
+        }),
+    })}
+  >
+    <Step2 />
+  </WizardStep>,
+];
+
 const Wizard = ({ children, initialValues, onSubmit }) => {
   const [stepNumber, setStepNumber] = useState(0);
-  const steps = React.Children.toArray(children);
+  // const steps = React.Children.toArray(children);
   const [snapshot, setSnapshot] = useState(initialValues);
 
   const step = steps[stepNumber];
   const totalSteps = steps.length;
   const isLastStep = stepNumber === totalSteps - 1;
 
-  const next = values => {
+  const next = (values) => {
     setSnapshot(values);
     setStepNumber(Math.min(stepNumber + 1, totalSteps - 1));
   };
 
-  const previous = values => {
+  const previous = (values) => {
     setSnapshot(values);
     setStepNumber(Math.max(stepNumber - 1, 0));
   };
@@ -55,7 +92,7 @@ const Wizard = ({ children, initialValues, onSubmit }) => {
       onSubmit={handleSubmit}
       validationSchema={step.props.validationSchema}
     >
-      {formik => (
+      {(formik) => (
         <Form>
           <p>
             Step {stepNumber + 1} of {totalSteps}
@@ -73,14 +110,12 @@ const Wizard = ({ children, initialValues, onSubmit }) => {
               </button>
             </div>
           </div>
-          <Debug/>
+          <Debug />
         </Form>
       )}
     </Formik>
   );
 };
-
-const WizardStep = ({ children }) => children;
 
 const App = () => (
   <div>
@@ -89,65 +124,35 @@ const App = () => (
       initialValues={{
         email: "",
         firstName: "",
-        lastName: ""
+        lastName: "",
+        social: {
+          facebook: "x",
+          twitter: "x",
+        },
       }}
-      onSubmit={async values =>
+      onSubmit={async (values) =>
         sleep(300).then(() => console.log("Wizard submit", values))
       }
     >
-      <WizardStep
+      {/* <WizardStep
         onSubmit={() => console.log("Step1 onSubmit")}
         validationSchema={Yup.object({
           firstName: Yup.string().required("required"),
-          lastName: Yup.string().required("required")
+          lastName: Yup.string().required("required"),
         })}
       >
-        <div>
-          <label htmlFor="firstName">First Name</label>
-          <Field
-            autoComplete="given-name"
-            component="input"
-            id="firstName"
-            name="firstName"
-            placeholder="First Name"
-            type="text"
-          />
-          <ErrorMessage className="error" component="div" name="firstName" />
-        </div>
-        <div>
-          <label htmlFor="lastName">Last Name</label>
-          <Field
-            autoComplete="family-name"
-            component="input"
-            id="lastName"
-            name="lastName"
-            placeholder="Last Name"
-            type="text"
-          />
-          <ErrorMessage className="error" component="div" name="lastName" />
-        </div>
+        <Step1 />
       </WizardStep>
       <WizardStep
         onSubmit={() => console.log("Step2 onSubmit")}
         validationSchema={Yup.object({
           email: Yup.string()
             .email("Invalid email address")
-            .required("required")
+            .required("required"),
         })}
       >
-        <div>
-          <label htmlFor="email">Email</label>
-          <Field
-            autoComplete="email"
-            component="input"
-            id="email"
-            name="email"
-            placeholder="Email"
-            type="text"
-          />
-          <ErrorMessage className="error" component="div" name="email" />
-        </div>
-      </WizardStep>
+        <Step2 />
+      </WizardStep> */}
     </Wizard>
   </div>
 );
